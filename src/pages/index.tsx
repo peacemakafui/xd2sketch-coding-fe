@@ -19,7 +19,7 @@ export default function Home() {
     setFileInfos: Function,
   ] = useState<[]>([]);
 
-  //Fetch file meta data from backend
+  //Fetch file meta data
   const getFileInfo = async () => {
     try {
       const jsonData = await getFile();
