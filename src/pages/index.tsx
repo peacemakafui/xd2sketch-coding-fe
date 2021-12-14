@@ -2,25 +2,44 @@ import Head from 'next/head';
 import { Table } from '@/components/Table';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SelectFileContainer } from '@/containers/SelectFileContainer';
-import styled from 'styled-components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { isValidFileType } from '@/utils/files';
-const StyledFileInput = styled.input`
-  border: 1px solid #979797;
-  border-radius: 6px;
-  padding: 12px 24px;
-  margin: 12px 0;
-`;
+import { uploadFile } from '@/services/uploadFile';
+import { getFile } from '@/services/getFile';
+import { deleteFile } from '@/services/deleteFile';
 
-const StyledButtonWrapper = styled.div`
-  display: flex;
-`;
+import { StyledFileInput } from '@/components/FileInput/styledFileInput';
+import { StyledButtonWrapper } from '@/components/ButtonWrapper/styledButton';
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>();
   const [isFilePicked, setIsFilePicked] = useState(false);
+  const [fileInfos, setFileInfos]: [
+    fileInfos: object[],
+    setFileInfos: Function,
+  ] = useState<[]>([]);
 
-  const changeHandler = (e: any) => {
+  //Fetch file meta data from backend
+  const getFileInfo = async () => {
+    try {
+      const jsonData = await getFile();
+      setFileInfos(jsonData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  //Delete file meta data
+  const deleteFileInfo = async (uuid: string) => {
+    try {
+      const removeFile = await deleteFile(uuid);
+      setFileInfos(fileInfos.filter((fileInfo: any) => fileInfo.uuid !== uuid));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     if (isValidFileType(e.target.files[0])) {
       setSelectedFile(e.target.files[0]);
       setIsFilePicked(true);
@@ -29,7 +48,7 @@ export default function Home() {
     }
   };
 
-  const onSubmitForm = async (e: any) => {
+  const onSubmitForm: React.ChangeEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     try {
       const scFile = {
@@ -38,19 +57,23 @@ export default function Home() {
         lastmodified: selectedFile.lastModified,
         filetype: selectedFile.type,
       };
-      const response = await fetch('http://localhost:5000/file-infos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(scFile),
-      });
-      window.location = '/';
-    } catch (error) {}
+
+      const response = await uploadFile(scFile);
+
+      window.location.reload();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const reset = () => {
     setIsFilePicked(false);
     setSelectedFile(null);
   };
+
+  useEffect(() => {
+    getFileInfo();
+  }, []);
   return (
     <div>
       <Head>
@@ -59,13 +82,11 @@ export default function Home() {
       </Head>
       <SelectFileContainer headline="Select a file">
         <form onSubmit={onSubmitForm}>
-          {!isFilePicked ? (
-            <p>Only ".doc",".pdf" and ".docx" files are allowed</p>
-          ) : null}
           <StyledFileInput
             type="file"
             name="file-info"
             onChange={changeHandler}
+            accept=".pdf, .docx, .doc"
           />
 
           {isFilePicked && (
@@ -82,6 +103,8 @@ export default function Home() {
       </SelectFileContainer>
       <Table
         columns={[`Filename`, `File Size`, `Last Modified`, `File Format`, ``]}
+        fileInfos={fileInfos}
+        deleteFileInfo={deleteFileInfo}
       />
     </div>
   );
