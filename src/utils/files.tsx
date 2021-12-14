@@ -17,7 +17,7 @@ export const fileType = (format: string) => {
     return 'docx';
   }
 };
-export const dateModified = (epoch: number) => {
+export const convertToUtcString = (epoch: number) => {
   return new Date(Number(epoch)).toUTCString();
 };
 export const isValidFileType = (file: File) =>
@@ -34,5 +34,5 @@ export const formatFileSize = (bytes: number): string => {
   if (bytes / KB_TO_BYTES_RAIO > 1) {
     return `${(bytes / KB_TO_BYTES_RAIO).toFixed(2)} KB`;
   }
-  return `${bytes.toFixed(2)} B`;
+  return `${bytes} B`;
 };

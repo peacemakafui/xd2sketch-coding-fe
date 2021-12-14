@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { formatFileSize, dateModified, fileType } from '@/utils/files';
+import { formatFileSize, convertToUtcString, fileType } from '@/utils/files';
+import { deleteFile } from '@/services/deleteFile';
+import { getFile } from '@/services/getFile';
 
 interface ITable {
   columns: string[];
+  fileInfos: object[];
+  deleteFileInfo: Function;
 }
 
 type IProps = ITable;
@@ -38,46 +42,17 @@ const StyledTableData = styled.td`
   border: none;
 `;
 
-export const Table: React.FC<IProps> = ({ columns }) => {
-  const [fileInfos, setFileInfos]: [
-    fileInfos: any,
-    setFileInfos: any,
-  ] = useState<[]>([]);
-
-  const deleteFileInfo = async (uuid: any) => {
-    try {
-      const deleteFileInfo = await fetch(
-        `http://localhost:5000/file-infos/${uuid}`,
-        {
-          method: 'DELETE',
-        },
-      );
-      setFileInfos(fileInfos.filter((fileInfo: any) => fileInfo.uuid !== uuid));
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const getFileInfo = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/file-infos');
-      const jsonData = await response.json();
-
-      setFileInfos(jsonData);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    getFileInfo();
-  }, []);
-
+export const Table: React.FC<IProps> = ({
+  columns,
+  fileInfos,
+  deleteFileInfo,
+}) => {
   return (
     <StyledTable>
       <tbody>
         <StyledTableRowHeader>
-          {columns.map((column) => (
-            <StyledTableHeader>{column}</StyledTableHeader>
+          {columns.map((column, index) => (
+            <StyledTableHeader key={index}>{column}</StyledTableHeader>
           ))}
         </StyledTableRowHeader>
         {fileInfos.map((fileInfo: any, index: number) => (
@@ -87,7 +62,7 @@ export const Table: React.FC<IProps> = ({ columns }) => {
               {formatFileSize(fileInfo.filesize)}
             </StyledTableData>
             <StyledTableData>
-              {dateModified(fileInfo.lastmodified)}
+              {convertToUtcString(fileInfo.lastmodified)}
             </StyledTableData>
             <StyledTableData>{fileType(fileInfo.filetype)}</StyledTableData>
             <StyledTableData>
