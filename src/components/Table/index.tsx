@@ -6,7 +6,13 @@ import { getFile } from '@/services/getFile';
 
 interface ITable {
   columns: string[];
-  fileInfos: object[];
+  fileInfos: {
+    filename: string;
+    filesize: number;
+    lastmodified: number;
+    filetype: string;
+    uuid: string;
+  }[];
   deleteFileInfo: Function;
 }
 
@@ -55,26 +61,37 @@ export const Table: React.FC<IProps> = ({
             <StyledTableHeader key={index}>{column}</StyledTableHeader>
           ))}
         </StyledTableRowHeader>
-        {fileInfos.map((fileInfo: any, index: number) => (
-          <StyledTableRow key={index}>
-            <StyledTableData>{fileInfo.filename}</StyledTableData>
-            <StyledTableData>
-              {formatFileSize(fileInfo.filesize)}
-            </StyledTableData>
-            <StyledTableData>
-              {convertToUtcString(fileInfo.lastmodified)}
-            </StyledTableData>
-            <StyledTableData>{fileType(fileInfo.filetype)}</StyledTableData>
-            <StyledTableData>
-              <button
-                type="submit"
-                onClick={() => deleteFileInfo(fileInfo.uuid)}
-              >
-                X
-              </button>
-            </StyledTableData>
-          </StyledTableRow>
-        ))}
+        {fileInfos.map(
+          (
+            fileInfo: {
+              filename: string;
+              filesize: number;
+              lastmodified: number;
+              filetype: string;
+              uuid: string;
+            },
+            index: number,
+          ) => (
+            <StyledTableRow key={index}>
+              <StyledTableData>{fileInfo.filename}</StyledTableData>
+              <StyledTableData>
+                {formatFileSize(fileInfo.filesize)}
+              </StyledTableData>
+              <StyledTableData>
+                {convertToUtcString(fileInfo.lastmodified)}
+              </StyledTableData>
+              <StyledTableData>{fileType(fileInfo.filetype)}</StyledTableData>
+              <StyledTableData>
+                <button
+                  type="submit"
+                  onClick={() => deleteFileInfo(fileInfo.uuid)}
+                >
+                  X
+                </button>
+              </StyledTableData>
+            </StyledTableRow>
+          ),
+        )}
       </tbody>
     </StyledTable>
   );

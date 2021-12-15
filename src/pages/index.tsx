@@ -15,9 +15,9 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>();
   const [isFilePicked, setIsFilePicked] = useState(false);
   const [fileInfos, setFileInfos]: [
-    fileInfos: object[],
+    fileInfos: [],
     setFileInfos: Function,
-  ] = useState<[]>([]);
+  ] = useState([]);
 
   //Fetch file meta data
   const getFileInfo = async () => {
@@ -33,15 +33,19 @@ export default function Home() {
   const deleteFileInfo = async (uuid: string) => {
     try {
       const removeFile = await deleteFile(uuid);
-      setFileInfos(fileInfos.filter((fileInfo: any) => fileInfo.uuid !== uuid));
+      setFileInfos(
+        fileInfos.filter(
+          (fileInfo: { uuid: string }) => fileInfo.uuid !== uuid,
+        ),
+      );
     } catch (err) {
       console.log(err);
     }
   };
 
   const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    if (isValidFileType(e.target.files[0])) {
-      setSelectedFile(e.target.files[0]);
+    if (isValidFileType(e!.target!.files![0])) {
+      setSelectedFile(e!.target!.files![0]);
       setIsFilePicked(true);
     } else {
       setIsFilePicked(false);
@@ -52,14 +56,23 @@ export default function Home() {
     e.preventDefault();
     try {
       const scFile = {
-        filename: selectedFile.name,
-        filesize: selectedFile.size,
-        lastmodified: selectedFile.lastModified,
-        filetype: selectedFile.type,
+        filename: selectedFile!.name,
+        filesize: selectedFile!.size,
+        lastmodified: selectedFile!.lastModified,
+        filetype: selectedFile!.type,
       };
-
       const response = await uploadFile(scFile);
+      const data = await response.json();
 
+      const result = {
+        status: response.status + '-' + response.statusText,
+        headers: {
+          'Content-Type': response.headers.get('Content-Type'),
+          'Content-Length': response.headers.get('Content-Length'),
+        },
+        data: data,
+      };
+      console.log(result.data);
       window.location.reload();
     } catch (err) {
       console.log(err);
